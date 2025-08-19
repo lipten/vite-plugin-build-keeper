@@ -1,0 +1,83 @@
+.page {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  text-align: left;
+}
+
+.page h2 {
+  color: #333;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.page p {
+  line-height: 1.6;
+  margin-bottom: 15px;
+}
+
+.feature-list {
+  background-color: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  margin-top: 20px;
+}
+
+.feature-list h3 {
+  color: #495057;
+  margin-bottom: 15px;
+}
+
+.feature-list ul {
+  list-style: none;
+  padding: 0;
+}
+
+.feature-list li {
+  padding: 8px 0;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.feature-list li:last-child {
+  border-bottom: none;
+}
+
+.info-box {
+  background-color: #e3f2fd;
+  padding: 20px;
+  border-radius: 8px;
+  margin-top: 20px;
+  border-left: 4px solid #2196f3;
+}
+
+.info-box h3 {
+  color: #1976d2;
+  margin-bottom: 15px;
+}
+
+.info-box ol {
+  padding-left: 20px;
+}
+
+.info-box li {
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+
+.contact-info {
+  background-color: #f3e5f5;
+  padding: 20px;
+  border-radius: 8px;
+  margin-top: 20px;
+  border-left: 4px solid #9c27b0;
+}
+
+.contact-info h3 {
+  color: #7b1fa2;
+  margin-bottom: 15px;
+}
+
+.contact-info p {
+  margin-bottom: 10px;
+  font-size: 1.1em;
+}

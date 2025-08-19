@@ -92,3 +92,5 @@ jspm_packages/
 
 # Plugin specific
 .build-versions.json
+
+.history
