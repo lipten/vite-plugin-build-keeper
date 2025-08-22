@@ -1,6 +1,6 @@
 {
   "name": "vite-plugin-build-keeper",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A Vite plugin for managing build versions and keeping multiple build artifacts for seamless deployments",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
