@@ -11,7 +11,7 @@ export class BuildManager {
 
   constructor(options: BuildManagerOptions = {}) {
     this.distPath = options.distPath || path.join(process.cwd(), 'dist')
-    this.versionsFile = options.versionsFile || path.join(process.cwd(), '.build-versions.json')
+    this.versionsFile = options.versionsFile || path.join(this.distPath, '.build-versions.json')
     this.maxVersions = options.maxVersions || 3
     this.assetsPattern = options.assetsPattern || 'assets/'
     this.verbose = options.verbose !== false // 默认启用详细日志

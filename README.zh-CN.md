@@ -54,12 +54,12 @@ export default defineConfig({
       // 构建管理器选项
       maxVersions: 5,                    // 保留5个版本（默认：3）
       distPath: './dist',                // 自定义dist目录
-      versionsFile: './.build-versions.json', // 自定义版本文件
+      versionsFile: './dist/.build-versions.json', // 自定义版本文件（默认在 dist 目录中）
       assetsPattern: 'assets/',          // 自定义资源模式
       
       // 插件选项
       enabled: true,                     // 启用/禁用插件
-      verbose: true                      // 显示详细日志
+      verbose: false                      // 显示详细日志
     })
   ],
   build: {
@@ -74,7 +74,7 @@ export default defineConfig({
 ```javascript
 buildKeeper({
   distPath: './build',                   // 使用 'build' 而不是 'dist'
-  versionsFile: './.my-versions.json',   // 自定义版本文件名
+  versionsFile: './.my-versions.json',   // 自定义版本文件名（默认在 dist 目录中）
   maxVersions: 10                        // 保留10个版本
 })
 ```
@@ -113,12 +113,12 @@ buildKeeper({
 | `verbose` | `boolean` | `true` | 显示详细控制台输出 |
 | `maxVersions` | `number` | `3` | 保留的最大版本数量 |
 | `distPath` | `string` | `./dist` | 构建输出目录路径 |
-| `versionsFile` | `string` | `./.build-versions.json` | 版本跟踪文件路径 |
+| `versionsFile` | `string` | `{distPath}/.build-versions.json` | 版本跟踪文件路径 |
 | `assetsPattern` | `string` | `assets/` | 匹配资源文件的模式 |
 
 ## 版本文件格式
 
-插件创建一个 `.build-versions.json` 文件来跟踪构建版本：
+插件在 dist 目录中创建一个 `.build-versions.json` 文件来跟踪构建版本：
 
 ```json
 [

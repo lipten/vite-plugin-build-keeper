@@ -51,12 +51,12 @@ export default defineConfig({
       // Build manager options
       maxVersions: 5,                    // Keep 5 versions (default: 3)
       distPath: './dist',                // Custom dist directory
-      versionsFile: './.build-versions.json', // Custom versions file
+      versionsFile: './dist/.build-versions.json', // Custom versions file (default: in dist directory)
       assetsPattern: 'assets/',          // Custom assets pattern
       
       // Plugin options
       enabled: true,                     // Enable/disable plugin
-      verbose: true                      // Show detailed logs
+      verbose: false                      // Show detailed logs
     })
   ]
 })
@@ -68,7 +68,7 @@ export default defineConfig({
 ```javascript
 buildKeeper({
   distPath: './build',                   // Use 'build' instead of 'dist'
-  versionsFile: './.my-versions.json',   // Custom version file name
+  versionsFile: './.my-versions.json',   // Custom version file name (default: in dist directory)
   maxVersions: 10                        // Keep 10 versions
 })
 ```
@@ -107,12 +107,12 @@ buildKeeper({
 | `verbose` | `boolean` | `true` | Show detailed console output |
 | `maxVersions` | `number` | `3` | Maximum number of versions to keep |
 | `distPath` | `string` | `./dist` | Path to the build output directory |
-| `versionsFile` | `string` | `./.build-versions.json` | Path to version tracking file |
+| `versionsFile` | `string` | `{distPath}/.build-versions.json` | Path to version tracking file |
 | `assetsPattern` | `string` | `assets/` | Pattern to match asset files |
 
 ## Version File Format
 
-The plugin creates a `.build-versions.json` file to track build versions:
+The plugin creates a `.build-versions.json` file in the dist directory to track build versions:
 
 ```json
 [

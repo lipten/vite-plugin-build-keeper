@@ -11,12 +11,12 @@ export default defineConfig([
       {
         file: 'dist/index.js',
         format: 'cjs',
-        sourcemap: true,
+        sourcemap: false,
       },
       {
         file: 'dist/index.mjs',
         format: 'es',
-        sourcemap: true,
+        sourcemap: false,
       },
     ],
     plugins: [

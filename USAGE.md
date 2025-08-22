@@ -53,17 +53,17 @@ buildKeeper({
 
 #### 3. versionsFile - 版本记录文件
 
-自定义版本记录文件的路径和名称，默认为 `./.build-versions.json`。
+自定义版本记录文件的路径和名称，默认为 `{distPath}/.build-versions.json`。
 
 ```javascript
 buildKeeper({
-  versionsFile: './.my-versions.json'  // 自定义文件名
+  versionsFile: './dist/.my-versions.json'  // 自定义文件名（相对于项目根目录）
 })
 ```
 
 **使用场景：**
 - 避免与项目中的其他 `.json` 文件冲突
-- 将版本记录放在特定目录
+- 将版本记录放在特定目录（默认在 dist 目录中）
 - 多项目共享版本记录
 
 #### 4. assetsPattern - 资源文件模式
@@ -125,7 +125,7 @@ export default defineConfig({
     buildKeeper({
       maxVersions: 5,                    // 保留5个版本
       distPath: './dist',
-      versionsFile: './.build-versions.json',
+      versionsFile: './dist/.build-versions.json', // 默认在 dist 目录中
       assetsPattern: 'assets/',
       enabled: true,
       verbose: process.env.NODE_ENV === 'development'
@@ -152,7 +152,7 @@ export default defineConfig(({ mode }) => {
       buildKeeper({
         maxVersions: isProduction ? 5 : 2,
         distPath: `./dist-${mode}`,
-        versionsFile: `./.build-versions-${mode}.json`,
+        versionsFile: `./dist/.build-versions-${mode}.json`, // 默认在 dist 目录中
         enabled: isProduction,
         verbose: mode === 'development'
       })
@@ -176,7 +176,7 @@ export default defineConfig({
     buildKeeper({
       maxVersions: 3,
       assetsPattern: 'static/',          // 跟踪 static 目录
-      versionsFile: './.static-versions.json'
+      versionsFile: './dist/.static-versions.json' // 默认在 dist 目录中
     })
   ],
   build: {
@@ -224,7 +224,7 @@ npm run build
 4. **检查版本管理**
 ```bash
 # 查看版本记录文件
-cat .build-versions.json
+cat dist/.build-versions.json
 
 # 多次构建测试
 npm run build

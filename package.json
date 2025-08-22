@@ -1,6 +1,6 @@
 {
   "name": "vite-plugin-build-keeper",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A Vite plugin for managing build versions and keeping multiple build artifacts for seamless deployments",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -35,12 +35,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/vite-plugin-build-keeper.git"
+    "url": "https://github.com/channelwill/vite-plugin-build-keeper.git"
   },
   "bugs": {
-    "url": "https://github.com/yourusername/vite-plugin-build-keeper/issues"
+    "url": "https://github.com/channelwill/vite-plugin-build-keeper/issues"
   },
-  "homepage": "https://github.com/yourusername/vite-plugin-build-keeper#readme",
+  "homepage": "https://github.com/channelwill/vite-plugin-build-keeper#readme",
   "devDependencies": {
     "@rollup/plugin-commonjs": "^25.0.0",
     "@rollup/plugin-node-resolve": "^15.0.0",

@@ -8,7 +8,7 @@ export default defineConfig({
     buildKeeper({
       maxVersions: 2,
       distPath: './dist',
-      versionsFile: './.build-versions.json',
+      versionsFile: './dist/.build-versions.json',
       assetsPattern: 'assets/',
       enabled: true,
       verbose: true
