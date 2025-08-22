@@ -36,7 +36,16 @@ export default defineConfig({
     buildKeeper()
   ],
   build: {
-    emptyOutDir: false // 重要：保留现有文件
+    emptyOutDir: false, // 重要：保留现有文件
+    rollupOptions: {
+      output: {
+        // 启用文件哈希，避免未更改的文件产生新文件名
+        // 插件会保留被版本信息引用的资源文件
+        entryFileNames: 'assets/[name]-[hash].js',
+        chunkFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash].[ext]'
+      }
+    }
   }
 })
 ```
@@ -63,7 +72,16 @@ export default defineConfig({
     })
   ],
   build: {
-    emptyOutDir: false // 重要：保留现有文件
+    emptyOutDir: false, // 重要：保留现有文件
+    rollupOptions: {
+      output: {
+        // 启用文件哈希，避免未更改的文件产生新文件名
+        // 插件会保留被版本信息引用的资源文件
+        entryFileNames: 'assets/[name]-[hash].js',
+        chunkFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash].[ext]'
+      }
+    }
   }
 })
 ```
@@ -94,6 +112,49 @@ buildKeeper({
   maxVersions: 5
 })
 ```
+
+## 重要配置
+
+### 必需的构建设置
+
+**⚠️ 重要**: 你必须在 Vite 构建配置中设置 `emptyOutDir: false`。这是插件正常工作的必要条件：
+
+```javascript
+export default defineConfig({
+  plugins: [buildKeeper()],
+  build: {
+    emptyOutDir: false  // 版本管理必需
+  }
+})
+```
+
+**为什么需要这个设置？**
+- 插件需要保留之前的构建文件来管理多个版本
+- 如果 `emptyOutDir` 为 `true`（默认值），Vite 会在每次构建前清空输出目录
+- 这会与插件的版本管理功能产生冲突
+
+### 文件哈希优化
+
+**💡 推荐**: 在构建配置中启用文件哈希以避免无更改的文件产生新的构建产物：
+
+```javascript
+build: {
+  emptyOutDir: false,
+  rollupOptions: {
+    output: {
+      entryFileNames: 'assets/[name]-[hash].js',
+      chunkFileNames: 'assets/[name]-[hash].js',
+      assetFileNames: 'assets/[name]-[hash].[ext]'
+    }
+  }
+}
+```
+
+**文件哈希的优势：**
+- **减少文件生成**: 未更改的文件不会在每次构建时产生新的文件名
+- **更好的缓存**: 内容相同的文件将具有相同的哈希值
+- **智能清理**: 插件会保留版本信息中引用的文件，即使它们来自较旧的构建
+- **存储效率**: 防止具有不同名称但内容相同的重复文件累积
 
 ## 工作原理
 

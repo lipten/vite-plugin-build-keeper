@@ -34,7 +34,19 @@ import { buildKeeper } from 'vite-plugin-build-keeper'
 export default defineConfig({
   plugins: [
     buildKeeper()
-  ]
+  ],
+  build: {
+    emptyOutDir: false,  // Important: Keep previous build files for version management
+    rollupOptions: {
+      output: {
+        // Enable file hashing to avoid generating new filenames for unchanged files
+        // The plugin will preserve resource files referenced in version information
+        entryFileNames: 'assets/[name]-[hash].js',
+        chunkFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash].[ext]'
+      }
+    }
+  }
 })
 ```
 
@@ -58,7 +70,19 @@ export default defineConfig({
       enabled: true,                     // Enable/disable plugin
       verbose: false                      // Show detailed logs
     })
-  ]
+  ],
+  build: {
+    emptyOutDir: false,  // Important: Keep previous build files for version management
+    rollupOptions: {
+      output: {
+        // Enable file hashing to avoid generating new filenames for unchanged files
+        // The plugin will preserve resource files referenced in version information
+        entryFileNames: 'assets/[name]-[hash].js',
+        chunkFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash].[ext]'
+      }
+    }
+  }
 })
 ```
 
@@ -88,6 +112,49 @@ buildKeeper({
   maxVersions: 5
 })
 ```
+
+## Important Configuration
+
+### Required Build Setting
+
+**⚠️ Important**: You must set `emptyOutDir: false` in your Vite build configuration. This is required for the plugin to work correctly:
+
+```javascript
+export default defineConfig({
+  plugins: [buildKeeper()],
+  build: {
+    emptyOutDir: false  // Required for version management
+  }
+})
+```
+
+**Why is this needed?**
+- The plugin needs to preserve previous build files to manage multiple versions
+- If `emptyOutDir` is `true` (default), Vite will clear the output directory before each build
+- This would conflict with the plugin's version management functionality
+
+### File Hashing Optimization
+
+**💡 Recommended**: Enable file hashing in your build configuration to avoid generating new build artifacts for unchanged files:
+
+```javascript
+build: {
+  emptyOutDir: false,
+  rollupOptions: {
+    output: {
+      entryFileNames: 'assets/[name]-[hash].js',
+      chunkFileNames: 'assets/[name]-[hash].js',
+      assetFileNames: 'assets/[name]-[hash].[ext]'
+    }
+  }
+}
+```
+
+**Benefits of file hashing:**
+- **Reduced file generation**: Unchanged files won't get new filenames on each build
+- **Better caching**: Files with the same content will have the same hash
+- **Smart cleanup**: The plugin preserves files referenced in version information, even if they're from older builds
+- **Storage efficiency**: Prevents accumulation of duplicate files with different names but same content
 
 ## How It Works
 
