@@ -9,6 +9,7 @@ A Vite plugin for managing build versions and keeping multiple build artifacts f
 - 🚀 **Version Management**: Automatically tracks build versions and manages file history
 - 📦 **Smart Cleanup**: Removes unused files while preserving assets from recent builds
 - 🔄 **Seamless Deployments**: Prevents 404 errors during page navigation by keeping multiple build versions
+- 🛡️ **Build Protection**: Safeguards latest build files with automatic backup and restore mechanism
 - ⚙️ **Configurable**: Customize version limits, file patterns, and output directories
 - 📊 **Detailed Logging**: Comprehensive build information and cleanup statistics
 
@@ -36,16 +37,7 @@ export default defineConfig({
     buildKeeper()
   ],
   build: {
-    emptyOutDir: false,  // Important: Keep previous build files for version management
-    rollupOptions: {
-      output: {
-        // Enable file hashing to avoid generating new filenames for unchanged files
-        // The plugin will preserve resource files referenced in version information
-        entryFileNames: 'assets/[name]-[hash].js',
-        chunkFileNames: 'assets/[name]-[hash].js',
-        assetFileNames: 'assets/[name]-[hash].[ext]'
-      }
-    }
+    emptyOutDir: false // Important: preserve existing files
   }
 })
 ```
@@ -72,16 +64,7 @@ export default defineConfig({
     })
   ],
   build: {
-    emptyOutDir: false,  // Important: Keep previous build files for version management
-    rollupOptions: {
-      output: {
-        // Enable file hashing to avoid generating new filenames for unchanged files
-        // The plugin will preserve resource files referenced in version information
-        entryFileNames: 'assets/[name]-[hash].js',
-        chunkFileNames: 'assets/[name]-[hash].js',
-        assetFileNames: 'assets/[name]-[hash].[ext]'
-      }
-    }
+    emptyOutDir: false // Important: preserve existing files
   }
 })
 ```
@@ -113,56 +96,25 @@ buildKeeper({
 })
 ```
 
-## Important Configuration
-
-### Required Build Setting
-
-**⚠️ Important**: You must set `emptyOutDir: false` in your Vite build configuration. This is required for the plugin to work correctly:
-
-```javascript
-export default defineConfig({
-  plugins: [buildKeeper()],
-  build: {
-    emptyOutDir: false  // Required for version management
-  }
-})
-```
-
-**Why is this needed?**
-- The plugin needs to preserve previous build files to manage multiple versions
-- If `emptyOutDir` is `true` (default), Vite will clear the output directory before each build
-- This would conflict with the plugin's version management functionality
-
-### File Hashing Optimization
-
-**💡 Recommended**: Enable file hashing in your build configuration to avoid generating new build artifacts for unchanged files:
-
-```javascript
-build: {
-  emptyOutDir: false,
-  rollupOptions: {
-    output: {
-      entryFileNames: 'assets/[name]-[hash].js',
-      chunkFileNames: 'assets/[name]-[hash].js',
-      assetFileNames: 'assets/[name]-[hash].[ext]'
-    }
-  }
-}
-```
-
-**Benefits of file hashing:**
-- **Reduced file generation**: Unchanged files won't get new filenames on each build
-- **Better caching**: Files with the same content will have the same hash
-- **Smart cleanup**: The plugin preserves files referenced in version information, even if they're from older builds
-- **Storage efficiency**: Prevents accumulation of duplicate files with different names but same content
-
 ## How It Works
+
+The plugin implements a four-step build protection workflow:
 
 1. **Build Start**: Plugin detects build process and initializes version tracking
 2. **File Collection**: During build, collects information about generated assets
-3. **Version Creation**: Creates a new version record with file metadata
-4. **Smart Cleanup**: Removes files that are not referenced by any recent version
-5. **Version Management**: Maintains a configurable number of recent versions
+3. **Backup Phase**: Creates a temporary backup of latest build files in `.last_build_assets` folder
+4. **Version Management**: Creates a new version record and removes files not referenced by recent versions
+5. **Restore Phase**: Restores latest build files from backup to ensure they're not accidentally deleted
+6. **Cleanup**: Removes the temporary backup folder to keep the directory clean
+
+### Build Protection Mechanism
+
+The plugin uses a sophisticated backup and restore system to prevent accidental deletion of the latest build files:
+
+- **Temporary Backup**: Latest build files are backed up to `.last_build_assets` (hidden folder)
+- **Safe Cleanup**: Version management can safely remove old files without affecting the latest build
+- **Automatic Restore**: Latest build files are automatically restored after cleanup
+- **Clean State**: Backup folder is removed after restoration, maintaining a clean directory structure
 
 ## Configuration Options
 
@@ -211,6 +163,13 @@ This plugin is particularly useful for Single Page Applications (SPAs) where use
 3. User navigates to a new page without refreshing
 4. The browser requests assets from version A (which still exist)
 5. No 404 errors occur
+
+### Build Safety
+
+The backup and restore mechanism ensures that:
+- Latest build files are never accidentally deleted during version cleanup
+- Build process is more reliable and predictable
+- No manual intervention required to recover from cleanup errors
 
 ## API Reference
 

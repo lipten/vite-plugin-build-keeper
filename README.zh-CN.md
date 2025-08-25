@@ -9,6 +9,7 @@
 - 🚀 **版本管理**: 自动跟踪构建版本并管理文件历史
 - 📦 **智能清理**: 删除未使用的文件，同时保留最近构建的资源
 - 🔄 **无缝部署**: 通过保留多个构建版本来防止页面导航时的 404 错误
+- 🛡️ **构建保护**: 通过自动备份和恢复机制保护最新构建文件
 - ⚙️ **可配置**: 自定义版本限制、文件模式和输出目录
 - 📊 **详细日志**: 全面的构建信息和清理统计
 
@@ -36,16 +37,7 @@ export default defineConfig({
     buildKeeper()
   ],
   build: {
-    emptyOutDir: false, // 重要：保留现有文件
-    rollupOptions: {
-      output: {
-        // 启用文件哈希，避免未更改的文件产生新文件名
-        // 插件会保留被版本信息引用的资源文件
-        entryFileNames: 'assets/[name]-[hash].js',
-        chunkFileNames: 'assets/[name]-[hash].js',
-        assetFileNames: 'assets/[name]-[hash].[ext]'
-      }
-    }
+    emptyOutDir: false // 重要：保留现有文件
   }
 })
 ```
@@ -72,16 +64,7 @@ export default defineConfig({
     })
   ],
   build: {
-    emptyOutDir: false, // 重要：保留现有文件
-    rollupOptions: {
-      output: {
-        // 启用文件哈希，避免未更改的文件产生新文件名
-        // 插件会保留被版本信息引用的资源文件
-        entryFileNames: 'assets/[name]-[hash].js',
-        chunkFileNames: 'assets/[name]-[hash].js',
-        assetFileNames: 'assets/[name]-[hash].[ext]'
-      }
-    }
+    emptyOutDir: false // 重要：保留现有文件
   }
 })
 ```
@@ -113,56 +96,25 @@ buildKeeper({
 })
 ```
 
-## 重要配置
-
-### 必需的构建设置
-
-**⚠️ 重要**: 你必须在 Vite 构建配置中设置 `emptyOutDir: false`。这是插件正常工作的必要条件：
-
-```javascript
-export default defineConfig({
-  plugins: [buildKeeper()],
-  build: {
-    emptyOutDir: false  // 版本管理必需
-  }
-})
-```
-
-**为什么需要这个设置？**
-- 插件需要保留之前的构建文件来管理多个版本
-- 如果 `emptyOutDir` 为 `true`（默认值），Vite 会在每次构建前清空输出目录
-- 这会与插件的版本管理功能产生冲突
-
-### 文件哈希优化
-
-**💡 推荐**: 在构建配置中启用文件哈希以避免无更改的文件产生新的构建产物：
-
-```javascript
-build: {
-  emptyOutDir: false,
-  rollupOptions: {
-    output: {
-      entryFileNames: 'assets/[name]-[hash].js',
-      chunkFileNames: 'assets/[name]-[hash].js',
-      assetFileNames: 'assets/[name]-[hash].[ext]'
-    }
-  }
-}
-```
-
-**文件哈希的优势：**
-- **减少文件生成**: 未更改的文件不会在每次构建时产生新的文件名
-- **更好的缓存**: 内容相同的文件将具有相同的哈希值
-- **智能清理**: 插件会保留版本信息中引用的文件，即使它们来自较旧的构建
-- **存储效率**: 防止具有不同名称但内容相同的重复文件累积
-
 ## 工作原理
+
+插件实现了四步构建保护工作流程：
 
 1. **构建开始**: 插件检测构建过程并初始化版本跟踪
 2. **文件收集**: 在构建过程中收集生成的资源信息
-3. **版本创建**: 创建包含文件元数据的新版本记录
-4. **智能清理**: 删除不被任何最近版本引用的文件
-5. **版本管理**: 维护可配置数量的最近版本
+3. **备份阶段**: 在 `.last_build_assets` 文件夹中创建最新构建文件的临时备份
+4. **版本管理**: 创建新版本记录并删除不被最近版本引用的文件
+5. **恢复阶段**: 从备份恢复最新构建文件，确保它们不会被意外删除
+6. **清理阶段**: 删除临时备份文件夹，保持目录整洁
+
+### 构建保护机制
+
+插件使用复杂的备份和恢复系统来防止最新构建文件被意外删除：
+
+- **临时备份**: 最新构建文件备份到 `.last_build_assets`（隐藏文件夹）
+- **安全清理**: 版本管理可以安全地删除旧文件而不影响最新构建
+- **自动恢复**: 清理后自动恢复最新构建文件
+- **清洁状态**: 恢复后删除备份文件夹，维护清洁的目录结构
 
 ## 配置选项
 
@@ -206,11 +158,18 @@ build: {
 
 ### 示例场景
 
-1. 用户正在使用应用版本 A
-2. 你部署了版本 B
+1. 用户正在使用版本 A 的应用
+2. 您部署了版本 B
 3. 用户在不刷新的情况下导航到新页面
 4. 浏览器请求版本 A 的资源（仍然存在）
-5. 不会发生 404 错误
+5. 不会出现 404 错误
+
+### 构建安全性
+
+备份和恢复机制确保：
+- 最新构建文件在版本清理过程中永远不会被意外删除
+- 构建过程更加可靠和可预测
+- 无需手动干预即可从清理错误中恢复
 
 ## API 参考
 
@@ -220,7 +179,7 @@ build: {
 
 ### BuildManager
 
-你也可以直接使用 BuildManager 类来获得更多控制：
+您也可以直接使用 BuildManager 类来获得更多控制：
 
 ```javascript
 import { BuildManager } from 'vite-plugin-build-keeper'

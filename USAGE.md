@@ -94,11 +94,11 @@ buildKeeper({
 **使用场景：**
 - 开发环境禁用以加快构建速度
 - 根据环境变量动态启用
-- 条件性启用插件
+- 临时禁用插件进行调试
 
 #### 6. verbose - 详细日志
 
-控制是否显示详细的构建日志，默认为 `true`。
+控制是否显示详细的日志输出，默认为 `true`。
 
 ```javascript
 buildKeeper({
@@ -107,13 +107,38 @@ buildKeeper({
 ```
 
 **使用场景：**
-- CI/CD 环境中减少日志输出
-- 生产环境构建时静默模式
+- 生产环境减少日志输出
 - 调试时启用详细日志
+- CI/CD 环境中控制日志级别
 
-## 实际使用示例
+## 构建保护机制
 
-### 示例 1：生产环境配置
+### 工作原理
+
+插件实现了四步构建保护工作流程，确保最新构建文件的安全性：
+
+1. **备份阶段**: 将最新构建的文件备份到 `.last_build_assets` 隐藏文件夹
+2. **版本管理**: 执行版本记录更新和旧文件清理
+3. **恢复阶段**: 从备份恢复最新构建文件，确保它们不会被误删除
+4. **清理阶段**: 删除临时备份文件夹，保持目录整洁
+
+### 安全特性
+
+- **临时备份**: 使用隐藏文件夹 `.last_build_assets` 进行临时备份
+- **原子操作**: 备份和恢复过程具有原子性，确保数据一致性
+- **自动清理**: 构建完成后自动清理备份文件夹
+- **错误恢复**: 即使某个步骤失败，也不会影响整体构建流程
+
+### 优势
+
+- **防止误删除**: 最新构建文件永远不会被版本清理过程误删除
+- **构建可靠性**: 提高构建过程的可靠性和可预测性
+- **无需干预**: 完全自动化，无需手动干预
+- **目录整洁**: 备份文件夹在构建完成后自动清理
+
+## 配置示例
+
+### 生产环境配置
 
 ```javascript
 // vite.config.js
@@ -125,10 +150,9 @@ export default defineConfig({
     buildKeeper({
       maxVersions: 5,                    // 保留5个版本
       distPath: './dist',
-      versionsFile: './dist/.build-versions.json', // 默认在 dist 目录中
       assetsPattern: 'assets/',
       enabled: true,
-      verbose: process.env.NODE_ENV === 'development'
+      verbose: false                     // 生产环境减少日志
     })
   ],
   build: {
@@ -137,34 +161,51 @@ export default defineConfig({
 })
 ```
 
-### 示例 2：多环境配置
+### 开发环境配置
 
 ```javascript
 // vite.config.js
 import { defineConfig } from 'vite'
 import { buildKeeper } from 'vite-plugin-build-keeper'
 
-export default defineConfig(({ mode }) => {
-  const isProduction = mode === 'production'
-  
-  return {
-    plugins: [
-      buildKeeper({
-        maxVersions: isProduction ? 5 : 2,
-        distPath: `./dist-${mode}`,
-        versionsFile: `./dist/.build-versions-${mode}.json`, // 默认在 dist 目录中
-        enabled: isProduction,
-        verbose: mode === 'development'
-      })
-    ],
-    build: {
-      emptyOutDir: false
-    }
+export default defineConfig({
+  plugins: [
+    buildKeeper({
+      maxVersions: 2,                    // 开发环境保留较少版本
+      enabled: process.env.NODE_ENV === 'production',
+      verbose: true                      // 开发环境启用详细日志
+    })
+  ],
+  build: {
+    emptyOutDir: false
   }
 })
 ```
 
-### 示例 3：自定义资源管理
+### 多环境配置
+
+```javascript
+// vite.config.js
+import { defineConfig } from 'vite'
+import { buildKeeper } from 'vite-plugin-build-keeper'
+
+const isProduction = process.env.NODE_ENV === 'production'
+
+export default defineConfig({
+  plugins: [
+    buildKeeper({
+      maxVersions: isProduction ? 5 : 2,
+      distPath: isProduction ? './dist' : './dev-dist',
+      verbose: !isProduction
+    })
+  ],
+  build: {
+    emptyOutDir: false
+  }
+})
+```
+
+### 自定义资源目录
 
 ```javascript
 // vite.config.js
@@ -232,6 +273,15 @@ npm run build
 npm run build
 ```
 
+5. **验证构建保护**
+```bash
+# 检查备份文件夹（构建过程中临时存在）
+ls -la dist/.last_build_assets
+
+# 验证最新构建文件完整性
+ls -la dist/assets/
+```
+
 ## 故障排除
 
 ### 常见问题
@@ -250,6 +300,11 @@ npm run build
    - 检查 `maxVersions` 配置
    - 确认版本记录文件权限
    - 查看控制台错误信息
+
+4. **备份文件夹未清理**
+   - 检查文件系统权限
+   - 确认构建过程是否正常完成
+   - 查看详细日志输出
 
 ### 调试技巧
 
@@ -274,6 +329,12 @@ const manager = new BuildManager()
 manager.cleanAllVersions()
 ```
 
+4. **手动清理备份文件夹**
+```bash
+# 如果备份文件夹未自动清理
+rm -rf dist/.last_build_assets
+```
+
 ## 最佳实践
 
 1. **版本数量设置**
@@ -284,14 +345,36 @@ manager.cleanAllVersions()
 2. **文件路径配置**
    - 使用相对路径
    - 避免使用绝对路径
-   - 考虑跨平台兼容性
+   - 确保路径在项目目录内
 
-3. **资源模式匹配**
-   - 确保模式与实际目录结构匹配
-   - 使用明确的目录名称
-   - 避免过于宽泛的模式
+3. **日志配置**
+   - 开发环境启用详细日志
+   - 生产环境禁用详细日志
+   - 根据 CI/CD 需求调整
 
-4. **环境配置**
-   - 开发环境禁用详细日志
-   - 生产环境启用版本管理
-   - 使用环境变量控制行为
+4. **构建配置**
+   - 始终设置 `emptyOutDir: false`
+   - 根据项目需求调整 `assetsPattern`
+   - 考虑多环境配置需求
+
+5. **监控和维护**
+   - 定期检查版本记录文件
+   - 监控构建日志输出
+   - 及时处理错误和警告
+
+## 性能考虑
+
+1. **备份操作开销**
+   - 备份过程会增加构建时间
+   - 大文件项目影响更明显
+   - 建议在开发环境禁用插件
+
+2. **磁盘空间使用**
+   - 临时备份会占用额外磁盘空间
+   - 构建完成后自动清理
+   - 确保有足够的磁盘空间
+
+3. **内存使用**
+   - 版本记录会占用少量内存
+   - 大量版本时考虑调整 `maxVersions`
+   - 监控内存使用情况
